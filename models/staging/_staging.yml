@@ -1,0 +1,115 @@
+version: 2
+
+models:
+  - name: stg_plio_session
+    description: Staged Plio watch sessions.
+    columns:
+      - name: session_id
+        description: Plio session primary key
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+      - name: retention
+        description: Comma-separated watch chunks
+      - name: plio_id
+      - name: watch_time
+      - name: created_at
+
+  - name: stg_plio_user
+    description: Staged Plio users. unique_id is the Glific contact id.
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique
+      - name: glific_id
+      - name: contact_phone
+
+  - name: stg_plio_plio
+    description: Staged Plio content records.
+    columns:
+      - name: plio_id
+        tests:
+          - not_null
+          - unique
+      - name: video_title
+      - name: video_id
+
+  - name: stg_plio_video
+    description: Staged video duration and URL. duration>0 filter is applied at join time, not here.
+    columns:
+      - name: video_id
+        tests:
+          - not_null
+          - unique
+      - name: url
+      - name: video_length
+
+  - name: stg_contacts
+    description: Staged Glific contacts.
+    columns:
+      - name: glific_id
+        tests:
+          - not_null
+          - unique
+      - name: phone
+      - name: group_labels
+      - name: language
+      - name: raw_fields
+
+  - name: stg_tlm26_messages
+    description: Staged TLM26 Glific message events.
+    columns:
+      - name: message_id
+        tests:
+          - not_null
+          - unique
+      - name: body
+      - name: contact_name
+      - name: contact_phone
+      - name: inserted_at
+      - name: flow_label
+      - name: flow_name
+      - name: media_url
+      - name: flow
+      - name: bsp_status
+      - name: gcs_url
+
+  - name: stg_schools
+    description: >
+      Staged school dimension. school_join_key is tabSchool.name (join to
+      contacts school_id). school_name is tabSchool.name1.
+    columns:
+      - name: school_join_key
+        tests:
+          - not_null
+      - name: school_name
+      - name: city
+      - name: district
+      - name: state
+      - name: model
+      - name: type
+
+  - name: stg_submissions
+    description: >
+      Staged tabSubmission rows (Dalgo). submission_validity is Valid / Invalid.
+      Join key to contacts / engagement is student_id (ST…). Does not feed
+      existing access / submission / quiz rates.
+    columns:
+      - name: submission_id
+        description: tabSubmission.name (Frappe PK)
+        tests:
+          - not_null
+          - unique
+      - name: student_id
+        description: ST… id from contacts
+      - name: submission_validity
+        description: Valid / Invalid; null if pending
+      - name: created_at
+      - name: completed_at
+      - name: submission_date
+      - name: result_status
+      - name: submission_type
+      - name: assign_id
+      - name: student_assignment

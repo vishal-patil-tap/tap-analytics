@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: int_schools_pi
+    description: School dimension plus hardcoded PI_assigned mapping from the registration SQL.
+    columns:
+      - name: school_id
+        tests:
+          - not_null
+      - name: school_name
+      - name: pi_assigned
+
+  - name: int_parent_consent
+    description: Earliest TLM26_ParentConsent_Received message per phone (stg_tlm26_messages).
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: flow_name
+      - name: consent_at
+
+  - name: int_registered_students
+    description: >
+      TLM26_AllStudent contacts, not TapTeam, one row per phone. Prefers
+      AllStudents_Batch[0-9]+ over NoBatch. Null labels filled with
+      Not entered / Not enetered as in source SQL.
+    columns:
+      - name: phone
+        tests:
+          - not_null
+          - unique
+      - name: glific_id
+        tests:
+          - not_null
+      - name: school_id
+      - name: school
+
+  - name: int_teacher_welcome_start
+    description: Latest TLM26_TeacherWelcome_Flow FlowStart per phone (stg_tlm26_messages).
+    columns:
+      - name: phone
+        tests:
+          - not_null
+          - unique
+      - name: inserted_at
+      - name: consent_msg_status
+
+  - name: int_teacher_student_link
+    description: Latest student-link-shared message on TeacherWelcome flow, per phone (stg_tlm26_messages).
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+          - unique
+      - name: student_link
+      - name: link_msg_status

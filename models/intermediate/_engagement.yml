@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: int_tlm26_activity_message_events
+    description: >
+      Tagged TLM26 activity/quiz message events. message_id added for incremental
+      unique key (not in the original SELECT).
+    columns:
+      - name: message_id
+        tests:
+          - not_null
+          - unique
+      - name: inserted_date
+        description: Partition column, IST date of inserted_at
+      - name: inserted_at
+      - name: contact_phone
+      - name: status_tag
+      - name: activity_number_tag
+      - name: unit_tag
+
+  - name: int_engagement_flow_start
+    description: Latest TLM26_Engagement_Flow_Start per phone x unit x activity.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: unit_num
+      - name: activity_num
+      - name: sent_at
+      - name: activity_sent
+
+  - name: int_engagement_access
+    description: Latest Activity_Access per phone x unit x activity. Parse differs from flow start.
+    columns:
+      - name: contact_phone
+      - name: unit_num
+      - name: activity_num
+      - name: activity_access
+
+  - name: int_engagement_submission
+    description: Latest Submission_Received per phone x unit x activity. Unit forced to B prefix.
+    columns:
+      - name: contact_phone
+      - name: unit_num
+      - name: activity_num
+      - name: activity_submission
+      - name: artefact
+
+  - name: int_engagement_flow_complete
+    description: Flow_end events. Grain is phone (no unit/activity), as in source SQL.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: activity_complete
+
+  - name: int_engagement_quiz_flags
+    description: >
+      Phone-level QuizSent / QuizAttempted / QuizCompleted existence
+      (last 10 digits of phone). Used only by
+      overall_student_engagement_activity; does not change
+      access/submission/Flow_end logic.
+    columns:
+      - name: phone_last10
+        tests:
+          - not_null
+          - unique
+      - name: quiz_sent
+      - name: quiz_attempted
+      - name: quiz_completed
+
+  - name: int_submission_validity
+    description: >
+      Latest judged submission_validity (Valid / Invalid) per student_id from
+      stg_submissions. Attribute only for engagement fact; not used in rates.
+    columns:
+      - name: student_id
+        tests:
+          - not_null
+          - unique
+      - name: submission_validity
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Valid', 'Invalid']
+

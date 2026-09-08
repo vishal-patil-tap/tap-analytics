@@ -1,0 +1,59 @@
+name: plio
+version: "1.0.0"
+config-version: 2
+profile: plio
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Matches current SQL; change with academic year
+  plio_title_like: "%2026%"
+  plio_session_start_date: "2026-07-01"
+  plio_incremental_lookback_days: 14
+  tlm_student_group_like: "%TLM26_AllStudent%"  # matches AllStudent and AllStudents*
+  tlm_exclude_group_like: "%TLM26_TapTeam%"
+  tlm_excluded_phones:
+    - "918448869330"
+    - "919778377854"
+    - "917890175057"
+    - "919068076307"
+    - "9876543210_3"
+    - "919325369003"
+    - "9876543210_5"
+    - "917531881975"
+    - "917988404006"
+    - "918564809100"
+    - "919411795145"
+    - "919037771988"
+
+models:
+  plio:
+    +persist_docs:
+      relation: true
+      columns: true
+    +on_schema_change: append_new_columns
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["staging"]
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+      +tags: ["intermediate"]
+    marts:
+      +materialized: incremental
+      +incremental_strategy: insert_overwrite
+      +tags: ["marts"]
+      plio:
+        +schema: marts_plio
+      engagement:
+        +schema: marts_engagement
+      registration:
+        +schema: marts_registration

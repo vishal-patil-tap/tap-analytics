@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: plio_video_info
+    description: >
+      Session-grain Plio video fact for eligible students with watch_time > 0
+      from plio_session_start_date. Partitioned by IST created_date.
+      student_id is contacts ST id from int_student_details. Watch Rate keys on
+      glific_id. Avg Watch % uses user_id as student_id. duration aliases video_length.
+    columns:
+      - name: session_id
+        description: Unique key
+        tests:
+          - not_null
+          - unique
+      - name: created_at
+        tests:
+          - not_null
+      - name: created_date
+        description: DATE(created_at, Asia/Kolkata); partition column
+        tests:
+          - not_null
+      - name: glific_id
+        tests:
+          - not_null
+      - name: student_id
+        description: >
+          From int_student_details (contacts raw_fields.student_id.value, e.g. ST…).
+          Null if missing on contact. Watch Rate uses glific_id, not this column.
+      - name: user_id
+        description: Plio user id; used as student_id inside Avg Watch %
+      - name: plio_id
+      - name: video_title
+      - name: url
+      - name: retention
+      - name: watch_time
+      - name: video_length
+      - name: duration
+        description: Alias of video_length for the avg-watch-% query
+      - name: total_watch_time
+        description: Sum of retention tokens (query 1; no nan-cleaning)
+      - name: video_watch_count
+        description: Count of retention chunks > 0, nan treated as 0
+      - name: student_name
+      - name: course
+      - name: grade
+      - name: level
+      - name: gender
+      - name: school_id
+      - name: school_name
+      - name: city
+      - name: state
+
+  - name: plio_video_watch_rate
+    description: >
+      Weekly video watch rate. Denominator is distinct glific_id in
+      plio_video_info that week (not the full eligible cohort).
+      Week is Monday–Sunday IST.
+    columns:
+      - name: week_start
+        description: Unique key and partition column (Monday IST)
+        tests:
+          - not_null
+          - unique
+      - name: week_end
+        tests:
+          - not_null
+      - name: total_students_in_week
+        tests:
+          - not_null
+      - name: students_who_watched
+        tests:
+          - not_null
+      - name: video_watch_rate_pct
+        description: students_who_watched / total_students_in_week * 100
+        tests:
+          - not_null
+
+  - name: plio_avg_video_watch_pct
+    description: >
+      Weekly average video watch percentage. Per student-video-week take MAX
+      (video_watch_count / duration * 100), average those across videos
+      (watch_pct > 0), then unweighted AVG across students. Student key is
+      user_id. watch_pct is not capped at 100.
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: week_end
+        tests:
+          - not_null
+      - name: student_count
+        tests:
+          - not_null
+      - name: avg_video_watch_pct
+        tests:
+          - not_null

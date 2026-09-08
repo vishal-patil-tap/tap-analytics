@@ -1,0 +1,144 @@
+version: 2
+
+sources:
+  - name: contact
+    description: Raw Glific contact export
+    database: central-phalanx-297915
+    schema: "918454812392"
+    quoting:
+      schema: true
+    tables:
+      - name: contacts
+        description: Student contact records with group labels and custom fields
+        columns:
+          - name: id
+            description: Glific contact ID
+          - name: phone
+            description: Contact phone number
+          - name: group_labels
+            description: Comma-separated group membership labels
+          - name: language
+          - name: raw_fields
+            description: JSON blob of custom contact fields
+
+  - name: messages
+    description: Raw student messages (engagement marts; not used in Plio video marts)
+    database: central-phalanx-297915
+    schema: MEL_2025_26
+    tables:
+      - name: TLM26_Messages
+        description: Student message events with flow and step labels
+        columns:
+          - name: id
+          - name: body
+          - name: contact_phone
+          - name: contact_name
+          - name: media_url
+          - name: inserted_at
+          - name: flow_name
+          - name: flow_label
+          - name: flow
+          - name: bsp_status
+          - name: gcs_url
+
+  - name: glific_messages
+    description: >
+      Live Glific messages. Used to backfill TLM26 engagement after MEL
+      TLM26_Messages lag (Batch 2 engagement lives here).
+    database: central-phalanx-297915
+    schema: "918454812392"
+    quoting:
+      schema: true
+    tables:
+      - name: messages
+        description: Live WhatsApp messages including TLM26 Batch1/Batch2 engagement
+        columns:
+          - name: id
+          - name: body
+          - name: contact_phone
+          - name: contact_name
+          - name: media_url
+          - name: inserted_at
+          - name: flow_name
+          - name: flow_label
+          - name: flow
+          - name: bsp_status
+          - name: gcs_url
+
+  - name: dalgo_staging
+    description: School and submission reference data from Dalgo
+    database: central-phalanx-297915
+    schema: dalgo_staging
+    tables:
+      - name: tabSchool
+        description: School master. Query joins contacts.school_id to name and uses name1 as school_name.
+        columns:
+          - name: name1
+            description: Used as school_name in Plio SQL
+          - name: name
+            description: Join key to contacts raw_fields.school_id.value
+          - name: city
+          - name: district
+          - name: state
+          - name: model
+          - name: type
+      - name: tabSubmission
+        description: >
+          Student assignment submissions with AI/manual validity
+          (Valid / Invalid). Join to contacts via student_id.
+        columns:
+          - name: name
+            description: Frappe primary key; staged as submission_id
+          - name: creation
+          - name: assign_id
+          - name: strengths
+          - name: created_at
+          - name: is_primary
+          - name: student_id
+            description: ST… id; joins contacts raw_fields.student_id.value
+          - name: completed_at
+          - name: encouragement
+          - name: result_status
+          - name: send_feedback
+          - name: submission_url
+          - name: submission_date
+          - name: submission_text
+          - name: submission_type
+          - name: submitted_files
+          - name: overall_feedback
+          - name: student_assignment
+          - name: submission_content
+          - name: submission_validity
+            description: Valid / Invalid (null if not judged)
+          - name: overall_feedback_translated
+
+  - name: plio_video
+    description: Plio production session and content tables
+    database: plio-production
+    schema: oyviqhjymo
+    tables:
+      - name: session
+        description: Watch sessions
+        columns:
+          - name: id
+          - name: user_id
+          - name: retention
+          - name: plio_id
+          - name: watch_time
+          - name: created_at
+      - name: user
+        description: Plio users; unique_id is Glific contact id
+        columns:
+          - name: id
+          - name: unique_id
+          - name: mobile
+      - name: plio
+        columns:
+          - name: id
+          - name: name
+          - name: video_id
+      - name: video
+        columns:
+          - name: id
+          - name: url
+          - name: duration

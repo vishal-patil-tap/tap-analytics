@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: tlm26_student_registration
+    description: >
+      TLM26_StudentRegistrationData_Overall. Grain is one row per phone.
+      Full-refresh table (contacts have no updated_at). consent_at is kept
+      from the earliest parent-consent message (not in the original SELECT)
+      for lineage only. clustered by state, district, school_id.
+    columns:
+      - name: phone
+        description: Unique key
+        tests:
+          - not_null
+          - unique
+      - name: glific_id
+        tests:
+          - not_null
+      - name: name
+      - name: grade
+      - name: gender
+        description: Source SQL uses the spelling Not enetered for nulls
+      - name: course
+      - name: level
+      - name: school
+      - name: school_id
+      - name: student_type
+        description: Old if TLM22–TLM25 group label else New
+      - name: batch
+      - name: school_name
+      - name: pi_assigned
+      - name: registration_type
+        description: Scratch / Backend / Not Applicable from consent flow_name
+      - name: consent_at
+        description: Earliest ParentConsent_Received inserted_at
+
+  - name: tlm26_teacher_registration
+    description: >
+      TLM26_TeacherRegistrationData. Spine is latest TeacherWelcome FlowStart
+      per phone, then contacts with TLM26_AllTeacher (not TapTeam). School join
+      uses school.value = tabSchool.name when value is SC###, else case-insensitive
+      name1. PI mapping reused from int_schools_pi. Full-refresh table.
+      Phone may duplicate if school name1 matches more than one row.
+    columns:
+      - name: phone
+        tests:
+          - not_null
+      - name: glific_id
+        tests:
+          - not_null
+      - name: name
+      - name: school
+      - name: role
+      - name: school_name
+      - name: pi_assigned
+      - name: consent_msg_status
+      - name: student_link
+      - name: link_msg_status
+      - name: teacher_batch_backup
+      - name: inserted_at
+        description: Latest TeacherWelcome FlowStart timestamp
+

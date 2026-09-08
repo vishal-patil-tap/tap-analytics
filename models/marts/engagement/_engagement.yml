@@ -1,0 +1,129 @@
+version: 2
+
+models:
+  - name: overall_student_engagement_activity
+    description: >
+      Student x unit x activity engagement fact from overall_student_engagement_activity.
+      sent_at is the latest Engagement_Flow_Start timestamp (added so weekly rates
+      can be partitioned; original SELECT omitted it). Week for access/submission
+      is the sent week, not access/submission time. Completion_Flag is phone-level
+      Flow_end. tlm26_Activity_details (TLM25) is not modeled.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: student_id
+        description: >
+          From contacts raw_fields.student_id.value (e.g. ST00506105).
+          Null if the contact has no student_id. Does not change engagement flags.
+      - name: unit_num
+      - name: activity_num
+      - name: sent_at
+        tests:
+          - not_null
+      - name: sent_date
+        description: IST date of sent_at; partition column
+        tests:
+          - not_null
+      - name: access_flag
+      - name: submission_flag
+      - name: completion_flag
+        description: 1 if the phone has any Flow_end (not quiz complete)
+      - name: quiz_sent_flag
+        description: >
+          Phone-level. 1 if the student has any Activity_QuizSent event
+          (last-10 phone match). Repeats on every unit/activity row.
+      - name: quiz_attempted_flag
+        description: >
+          Phone-level. 1 if the student has any Activity_QuizAttempted event
+          or a quiz-attempted message body. Repeats on every unit/activity row.
+          Distinct from quiz_completed_flag and from completion_flag (Flow_end).
+      - name: quiz_completed_flag
+        description: >
+          Phone-level. 1 if the student has any Activity_QuizCompleted event.
+          Distinct from completion_flag (Flow_end).
+      - name: submission_validity
+        description: >
+          Student-level (latest Valid/Invalid from stg_submissions via student_id).
+          Repeats on every unit/activity row. Null if no judged submission.
+          Does not change access / WhatsApp submission / quiz rates.
+
+  - name: weekly_access_rate
+    description: >
+      Weekly Access Rate. Denominator = distinct phones with an engagement
+      flow start that IST week. Numerator = distinct phones with access_flag=1.
+      Same pattern as video watch rate.
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: week_end
+      - name: total_students_in_week
+      - name: students_who_accessed
+      - name: weekly_access_rate_pct
+
+  - name: weekly_submission_rate
+    description: >
+      Weekly Submission Rate. Same denominator as access rate (flow-start
+      students that week). Numerator = submission_flag=1.
+      Also Valid / Invalid rates among submitters (option B):
+      valid|invalid ÷ students_who_submitted × 100 (0 submitted → 0%).
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: week_end
+      - name: total_students_in_week
+      - name: students_who_submitted
+      - name: weekly_submission_rate_pct
+        description: submitted ÷ flow-start students that week × 100 (unchanged)
+      - name: students_with_valid_submission
+        description: Distinct phones with submission_flag=1 and validity Valid
+      - name: students_with_invalid_submission
+        description: Distinct phones with submission_flag=1 and validity Invalid
+      - name: weekly_valid_submission_rate_pct
+        description: valid ÷ students_who_submitted × 100
+      - name: weekly_invalid_submission_rate_pct
+        description: invalid ÷ students_who_submitted × 100
+
+  - name: weekly_quiz_completion_rate
+    description: >
+      Weekly Quiz Completion Rate from overall_student_engagement_activity.
+      Denominator = students_who_were_sent_quiz (quiz_sent_flag = 1).
+      Numerator = quiz_completed_flag = 1. Week is engagement sent week.
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: week_end
+      - name: total_students_in_week
+      - name: students_who_were_sent_quiz
+        description: Distinct phones with quiz_sent_flag = 1 that week
+      - name: students_who_completed_quiz
+      - name: weekly_quiz_completion_rate_pct
+
+  - name: student_activity_submissions
+    description: >
+      Submission-only rows from overall_student_engagement_activity
+      (submission_flag = 1). Includes submission_validity when joined.
+      Does not change weekly access / submission / quiz rates.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: unit_num
+      - name: activity_num
+      - name: sent_at
+        tests:
+          - not_null
+      - name: sent_date
+        description: Partition column; IST date of engagement sent_at
+        tests:
+          - not_null
+      - name: submission_flag
+      - name: artefact
+      - name: submission_validity
+        description: Valid / Invalid / null from tabSubmission via student_id

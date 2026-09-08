@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: int_student_details
+    description: >
+      TLM26 students from contacts, excluding TapTeam. Matches TLM26_AllStudent
+      and TLM26_AllStudents*. Custom fields extracted from raw_fields JSON.
+      Reused by Plio, engagement, and registration marts.
+    columns:
+      - name: glific_id
+        tests:
+          - not_null
+      - name: phone
+      - name: student_id
+        description: raw_fields.student_id.value (e.g. ST00506105); null if missing on contact
+      - name: language
+      - name: batch
+        description: From TLM26_AllStudents_BatchN or NoBatch
+      - name: student_name
+      - name: grade
+      - name: gender
+      - name: course
+      - name: level
+      - name: school_id
+        description: raw_fields.school_id.value
+
+  - name: int_eligible_students
+    description: >
+      Students who are in TLM26_AllStudents (not TapTeam), have a school match
+      on tabSchool.name, and exist in Plio user (unique_id = glific id).
+    columns:
+      - name: glific_id
+        tests:
+          - not_null
+      - name: student_name
+      - name: contact_phone
+      - name: school_id
+      - name: school_name
+      - name: city
+      - name: state
+
+  - name: int_plio_base
+    description: >
+      Sessions for plios whose title matches plio_title_like, with user and
+      video attributes. Videos with duration=0 do not match (LEFT JOIN subquery).
+    columns:
+      - name: session_id
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+      - name: glific_id
+      - name: contact_phone
+      - name: plio_id
+      - name: video_title
+      - name: url
+      - name: video_length
+      - name: watch_time
+      - name: retention
+      - name: created_at
