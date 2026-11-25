@@ -27,6 +27,7 @@ select
   city,
   unit_num,
   activity_num,
+  activity_id,
   sent_at,
   sent_date,
   submission_flag,

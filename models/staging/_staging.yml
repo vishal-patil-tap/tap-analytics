@@ -34,6 +34,8 @@ models:
           - not_null
           - unique
       - name: video_title
+      - name: plio_uuid
+        description: Play-link code (app.plio.in/tap/play/{uuid}). Additive; not used by watch-rate marts.
       - name: video_id
 
   - name: stg_plio_video

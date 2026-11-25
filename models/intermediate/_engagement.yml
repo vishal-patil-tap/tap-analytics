@@ -26,6 +26,8 @@ models:
           - not_null
       - name: unit_num
       - name: activity_num
+      - name: activity_id
+        description: Canonical TLM26 - U1 - RA1 / TLM26 - B1 - EA3 style id
       - name: sent_at
       - name: activity_sent
 
@@ -36,6 +38,19 @@ models:
       - name: unit_num
       - name: activity_num
       - name: activity_access
+
+  - name: int_engagement_plio_video
+    description: >
+      Latest Plio play UUID from Activity_Access message body per phone x unit x
+      activity. Joined to stg_plio_plio on uuid. Attribute only; does not change
+      access_flag or rates.
+    columns:
+      - name: contact_phone
+      - name: unit_num
+      - name: activity_num
+      - name: plio_uuid
+      - name: plio_id
+      - name: video_title
 
   - name: int_engagement_submission
     description: Latest Submission_Received per phone x unit x activity. Unit forced to B prefix.

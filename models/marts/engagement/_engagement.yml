@@ -18,6 +18,11 @@ models:
           Null if the contact has no student_id. Does not change engagement flags.
       - name: unit_num
       - name: activity_num
+      - name: activity_id
+        description: >
+          Canonical activity id, e.g. TLM26 - U1 - RA1 when the flow_label
+          has TLM26 - U1 - Activity RA1; otherwise TLM26 - {unit_num} - {activity_num}
+          (e.g. TLM26 - B1 - EA3). Display/join only; does not change rates.
       - name: sent_at
         tests:
           - not_null
@@ -47,6 +52,13 @@ models:
           Student-level (latest Valid/Invalid from stg_submissions via student_id).
           Repeats on every unit/activity row. Null if no judged submission.
           Does not change access / WhatsApp submission / quiz rates.
+      - name: plio_id
+        description: >
+          From latest Activity_Access Plio play-link UUID for this phone x unit x
+          activity. Null if no access link. Does not change rates.
+      - name: video_title
+        description: >
+          Plio name for plio_id. Null if no mapped link. Does not change rates.
 
   - name: weekly_access_rate
     description: >
@@ -116,6 +128,8 @@ models:
           - not_null
       - name: unit_num
       - name: activity_num
+      - name: activity_id
+        description: Same canonical id as overall_student_engagement_activity
       - name: sent_at
         tests:
           - not_null

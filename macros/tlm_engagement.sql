@@ -17,6 +17,18 @@
 {% endmacro %}
 
 
+{% macro tlm26_activity_id(flow_label_column, unit_num_column, activity_num_column) %}
+coalesce(
+  regexp_replace(
+    regexp_extract({{ flow_label_column }}, r'TLM26 - [A-Za-z0-9]+ - Activity [A-Za-z0-9]+'),
+    r' - Activity ',
+    ' - '
+  ),
+  concat('TLM26 - ', {{ unit_num_column }}, ' - ', {{ activity_num_column }})
+)
+{% endmacro %}
+
+
 {% macro is_quiz_attempted_body(body_column) %}
 (
   {{ body_column }} like "%Let's try the next question%"

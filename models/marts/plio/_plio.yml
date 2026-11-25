@@ -50,6 +50,11 @@ models:
       - name: school_name
       - name: city
       - name: state
+      - name: activity_id
+        description: >
+          From overall_student_engagement_activity on glific_id + plio_id
+          (closest Flow Start to this session). Null if no mapped access link.
+          Last column; does not change watch rates. Session grain stays session_id.
 
   - name: plio_video_watch_rate
     description: >

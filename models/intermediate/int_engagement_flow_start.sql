@@ -7,6 +7,11 @@ select
   msg.inserted_at as sent_at,
   split(split(msg.flow_label, ',')[safe_ordinal(3)], '_')[safe_ordinal(2)] as unit_num,
   split(split(msg.flow_label, ',')[safe_ordinal(3)], '_')[safe_ordinal(3)] as activity_num,
+  {{ tlm26_activity_id(
+    'msg.flow_label',
+    "split(split(msg.flow_label, ',')[safe_ordinal(3)], '_')[safe_ordinal(2)]",
+    "split(split(msg.flow_label, ',')[safe_ordinal(3)], '_')[safe_ordinal(3)]"
+  ) }} as activity_id,
   1 as activity_sent
 from {{ ref('stg_tlm26_messages') }} as msg
 left join {{ ref('stg_contacts') }} as con

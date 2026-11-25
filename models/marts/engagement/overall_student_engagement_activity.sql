@@ -36,6 +36,7 @@ with joined as (
     ef.bsp_status,
     ef.unit_num,
     ef.activity_num,
+    ef.activity_id,
     ef.activity_sent,
     ef.sent_at,
     case when aa.activity_access is null then 0 else 1 end as access_flag,
@@ -48,7 +49,9 @@ with joined as (
     case when qz.quiz_sent = 1 then 1 else 0 end as quiz_sent_flag,
     case when qz.quiz_attempted = 1 then 1 else 0 end as quiz_attempted_flag,
     case when qz.quiz_completed = 1 then 1 else 0 end as quiz_completed_flag,
-    sv.submission_validity
+    sv.submission_validity,
+    pv.plio_id,
+    pv.video_title
   from {{ ref('int_engagement_flow_start') }} as ef
   left join {{ ref('int_engagement_access') }} as aa
     on ef.contact_phone = aa.contact_phone
@@ -68,6 +71,10 @@ with joined as (
     on sd.school_id = sch.school_join_key
   left join {{ ref('int_submission_validity') }} as sv
     on sd.student_id = sv.student_id
+  left join {{ ref('int_engagement_plio_video') }} as pv
+    on ef.contact_phone = pv.contact_phone
+    and ef.unit_num = pv.unit_num
+    and ef.activity_num = pv.activity_num
   where ef.sent_at is not null
     {% if is_incremental() %}
     and {{ ist_date('ef.sent_at') }} >= {{ incremental_lookback_week_start() }}
@@ -100,6 +107,7 @@ select
   any_value(bsp_status) as bsp_status,
   unit_num,
   activity_num,
+  any_value(activity_id) as activity_id,
   max(activity_sent) as activity_sent,
   any_value(sent_at) as sent_at,
   {{ ist_date('any_value(sent_at)') }} as sent_date,
@@ -113,6 +121,8 @@ select
   max(quiz_sent_flag) as quiz_sent_flag,
   max(quiz_attempted_flag) as quiz_attempted_flag,
   max(quiz_completed_flag) as quiz_completed_flag,
-  any_value(submission_validity) as submission_validity
+  any_value(submission_validity) as submission_validity,
+  any_value(plio_id) as plio_id,
+  any_value(video_title) as video_title
 from joined
 group by contact_phone, unit_num, activity_num
