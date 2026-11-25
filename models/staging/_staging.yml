@@ -61,7 +61,9 @@ models:
       - name: raw_fields
 
   - name: stg_tlm26_messages
-    description: Staged TLM26 Glific message events.
+    description: >
+      MEL_2025_26.TLM26_Messages only. Used by engagement and funnel.
+      Live Glific messages are not unioned.
     columns:
       - name: message_id
         tests:

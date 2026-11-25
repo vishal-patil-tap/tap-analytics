@@ -54,7 +54,12 @@ models:
         description: >
           From overall_student_engagement_activity on glific_id + plio_id
           (closest Flow Start to this session). Null if no mapped access link.
-          Last column; does not change watch rates. Session grain stays session_id.
+          Does not change watch rates. Session grain stays session_id.
+      - name: funnel_activity_id
+        description: >
+          From overall_student_funnel_activity on glific_id + plio_id
+          (TLM26 - U1 - Activity RA1). Closest sent/access to this session.
+          Null if no mapped funnel link. Does not change watch rates.
 
   - name: plio_video_watch_rate
     description: >

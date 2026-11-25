@@ -57,3 +57,5 @@ models:
         +schema: marts_engagement
       registration:
         +schema: marts_registration
+      funnel:
+        +schema: marts_funnel

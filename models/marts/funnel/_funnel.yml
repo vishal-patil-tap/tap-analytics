@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: funnel_activity_messages
+    description: >
+      Funnel message fact. Grain = message_id. Source MEL TLM26_Messages via
+      stg_tlm26_messages. activity_id like TLM26 - U1 - Activity RA1.
+    columns:
+      - name: message_id
+        tests:
+          - not_null
+          - unique
+      - name: inserted_at
+        tests:
+          - not_null
+      - name: inserted_date
+        description: IST date of inserted_at; partition column
+        tests:
+          - not_null
+      - name: contact_phone
+      - name: activity_id
+        tests:
+          - not_null
+      - name: activity_type
+        description: CA or RA from flow_label
+        tests:
+          - accepted_values:
+              values: ['CA', 'RA']
+
+  - name: overall_student_funnel_activity
+    description: >
+      Engagement-like student x curriculum activity funnel. Grain =
+      contact_phone x activity_id (TLM26 - U1 - Activity RA1). No Flow_end
+      completion_flag. Quiz flags are per activity_id, not phone-level.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: student_id
+        description: Contacts ST id. Null if missing. Does not change flags.
+      - name: activity_id
+        tests:
+          - not_null
+      - name: body
+        description: >
+          Latest non-empty Activity_Sent body; else latest non-empty message
+          body for this phone x activity_id. Null if all empty.
+      - name: activity_type
+        tests:
+          - accepted_values:
+              values: ['CA', 'RA']
+      - name: unit_num
+        description: U1 from activity_id
+      - name: activity_num
+        description: RA1 / CA1 from activity_id
+      - name: activity_sent
+      - name: sent_date
+        description: IST date of sent_at, else first labelled message; partition
+        tests:
+          - not_null
+      - name: access_flag
+      - name: submission_flag
+      - name: quiz_sent_flag
+        description: Per activity_id (not phone-level like engagement)
+      - name: quiz_access_flag
+      - name: quiz_attempted_flag
+      - name: quiz_completed_flag
+      - name: submission_validity
+        description: Student-level latest Valid/Invalid. Does not change flags.
+      - name: plio_id
+        description: Latest Activity_Access Plio UUID for this phone x activity_id
+      - name: video_title
+        description: Plio name for plio_id. Null if no mapped link.
+      - name: sent_video_link
+        description: >
+          Last column. From latest Activity_Access body with a video URL:
+          plio or youtube. Null if no access video link. Does not change flags.
+        tests:
+          - accepted_values:
+              values: ['plio', 'youtube']
+              quote: true
+              config:
+                where: "sent_video_link is not null"
+      - name: access_at
+      - name: submission_at
+
+  - name: weekly_funnel_access_rate
+    description: >
+      Weekly funnel access rate. Denominator = distinct phones with a funnel
+      row that IST Monday week (sent_date). Numerator = access_flag=1.
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: weekly_access_rate_pct
+
+  - name: weekly_funnel_submission_rate
+    description: >
+      Weekly funnel submission rate. Same denominator as access. Also Valid /
+      Invalid among submitters (option B).
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: weekly_submission_rate_pct
+
+  - name: weekly_funnel_quiz_rate
+    description: >
+      Weekly funnel quiz attempt rate. Numerator = quiz_attempted_flag,
+      denominator = quiz_sent_flag (not quiz_completed; that flag is nearly empty).
+    columns:
+      - name: week_start
+        tests:
+          - not_null
+          - unique
+      - name: weekly_quiz_attempt_rate_pct

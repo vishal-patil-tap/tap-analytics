@@ -47,44 +47,79 @@ with watched_sessions as (
     {% if is_incremental() %}
     and {{ ist_date('b.created_at') }} >= {{ incremental_lookback_week_start() }}
     {% endif %}
+),
+
+with_engagement as (
+  select
+    w.*,
+    e.activity_id
+  from watched_sessions as w
+  left join {{ ref('overall_student_engagement_activity') }} as e
+    on w.glific_id = cast(e.glific_id as string)
+    and w.plio_id = e.plio_id
+  qualify row_number() over (
+    partition by w.session_id
+    order by
+      case
+        when timestamp(e.sent_at) <= w.created_at then 0
+        else 1
+      end,
+      abs(timestamp_diff(w.created_at, timestamp(e.sent_at), second))
+  ) = 1
+),
+
+with_funnel as (
+  select
+    w.session_id,
+    f.activity_id as funnel_activity_id
+  from watched_sessions as w
+  left join {{ ref('overall_student_funnel_activity') }} as f
+    on w.glific_id = cast(f.glific_id as string)
+    and w.plio_id = f.plio_id
+  qualify row_number() over (
+    partition by w.session_id
+    order by
+      case
+        when timestamp(coalesce(f.sent_at, f.access_at)) <= w.created_at then 0
+        else 1
+      end,
+      abs(
+        timestamp_diff(
+          w.created_at,
+          timestamp(coalesce(f.sent_at, f.access_at)),
+          second
+        )
+      )
+  ) = 1
 )
 
 select
-  w.created_at,
-  {{ ist_date('w.created_at') }} as created_date,
-  w.glific_id,
-  w.student_id,
-  w.session_id,
-  w.user_id,
-  w.plio_id,
-  w.video_title,
-  w.url,
-  w.retention,
-  w.watch_time,
-  w.video_length,
-  w.video_length as duration,
-  round(w.total_watch_time, 1) as total_watch_time,
-  w.video_watch_count,
-  w.student_name,
-  w.course,
-  w.grade,
-  w.level,
-  w.gender,
-  w.school_id,
-  w.school_name,
-  w.city,
-  w.state,
-  e.activity_id
-from watched_sessions as w
-left join {{ ref('overall_student_engagement_activity') }} as e
-  on w.glific_id = cast(e.glific_id as string)
-  and w.plio_id = e.plio_id
-qualify row_number() over (
-  partition by w.session_id
-  order by
-    case
-      when timestamp(e.sent_at) <= w.created_at then 0
-      else 1
-    end,
-    abs(timestamp_diff(w.created_at, timestamp(e.sent_at), second))
-) = 1
+  we.created_at,
+  {{ ist_date('we.created_at') }} as created_date,
+  we.glific_id,
+  we.student_id,
+  we.session_id,
+  we.user_id,
+  we.plio_id,
+  we.video_title,
+  we.url,
+  we.retention,
+  we.watch_time,
+  we.video_length,
+  we.video_length as duration,
+  round(we.total_watch_time, 1) as total_watch_time,
+  we.video_watch_count,
+  we.student_name,
+  we.course,
+  we.grade,
+  we.level,
+  we.gender,
+  we.school_id,
+  we.school_name,
+  we.city,
+  we.state,
+  we.activity_id,
+  fn.funnel_activity_id
+from with_engagement as we
+left join with_funnel as fn
+  on we.session_id = fn.session_id

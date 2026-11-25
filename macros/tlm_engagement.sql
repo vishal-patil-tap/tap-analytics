@@ -17,6 +17,12 @@
 {% endmacro %}
 
 
+{# Funnel curriculum labels: TLM26 - U1 - Activity RA1 / CA1 #}
+{% macro tlm26_funnel_activity_regex() %}
+r'TLM26\s*-\s*U\d+\s*-\s*Activity\s+[CR]A\d+'
+{% endmacro %}
+
+
 {% macro tlm26_activity_id(flow_label_column, unit_num_column, activity_num_column) %}
 coalesce(
   regexp_replace(

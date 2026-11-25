@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: int_funnel_activity_messages
+    description: >
+      Message-grain funnel base from stg_tlm26_messages (MEL TLM26_Messages).
+      activity_id = TLM26 - U1 - Activity RA1 / CA1. activity_type = CA or RA.
+    columns:
+      - name: message_id
+        tests:
+          - not_null
+          - unique
+      - name: inserted_at
+      - name: contact_phone
+      - name: activity_id
+        tests:
+          - not_null
+      - name: activity_type
+        tests:
+          - accepted_values:
+              values: ['CA', 'RA']
+
+  - name: int_funnel_student_activity
+    description: >
+      Phone x TLM26 U/RA/CA activity_id. sent/access/submission/quiz flags
+      from flow_label. Quiz attempted also uses quiz-attempted message body.
+    columns:
+      - name: contact_phone
+        tests:
+          - not_null
+      - name: activity_id
+        tests:
+          - not_null
+      - name: activity_type
+      - name: sent_flag
+      - name: access_flag
+      - name: submission_flag
+      - name: quiz_sent_flag
+      - name: quiz_access_flag
+      - name: quiz_attempted_flag
+      - name: quiz_completed_flag
+
+  - name: int_funnel_contact_details
+    description: >
+      Contact attributes for funnel (student_id, name, school_id, ...).
+      All Glific contacts except TapTeam; not limited to TLM26_AllStudent.
+      One row per phone. Engagement still uses int_student_details.
+    columns:
+      - name: phone
+        tests:
+          - not_null
+          - unique
+      - name: student_id
+      - name: student_name
+
+  - name: int_funnel_plio_video
+    description: >
+      Latest Plio play UUID from Activity_Access per phone x funnel activity_id.
+      Attribute only; does not change funnel flags.
